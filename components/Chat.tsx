@@ -337,8 +337,8 @@ function Chat() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const handleInputChange = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleTextareaChange = useCallback(
+    (event: React.ChangeEvent<HTMLTextAreaElement>) => {
       setInputText(event.target.value)
     },
     []
@@ -479,9 +479,10 @@ function Chat() {
     })
   }, [previewAudioUrl, audioBlob, maxAudioSeconds, messages])
 
-  const handleKeyPress = useCallback(
-    (event: React.KeyboardEvent<HTMLInputElement>) => {
-      if (event.key === "Enter") {
+  const handleKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault()
         handleSubmit()
       }
     },
@@ -537,8 +538,8 @@ function Chat() {
   return (
     <div
       style={{
-        display: "flex",
-        flexDirection: "column",
+        display: "grid",
+        gridTemplateRows: "auto minmax(0px, 1fr) auto",
         height: "100vh",
         overflow: "hidden",
         backgroundColor: "#F0F2F5"
@@ -553,30 +554,34 @@ function Chat() {
         hasChat={messages.length > 0}
       />
 
-      {/* Fixed Progress Bar */}
-      {progressItems.length > 0 && (
-        <ChatProgress
-          progressItems={progressItems}
-          // offset={modelConfig.task === "speech-to-text" ? 24 : 16}
-          offset={modelConfig.task === "speech-to-text" ? 230 : 64}
-        />
-      )}
+      {/* Flexible Middle Area */}
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "end"
+        }}>
+        {/* Scrollable Messages Container */}
+        {messages.length > 0 ? (
+          <ChatMessages messages={messages} messagesEndRef={messagesEndRef} />
+        ) : (
+          <ChatExamples
+            task={modelConfig.task}
+            onExampleClick={(example) => {
+              if (example.image) {
+                handleImageUrl(example.image)
+              }
+              setInputText(example.prompt)
+              handleSubmitOnText(example.prompt, example.image)
+            }}
+          />
+        )}
 
-      {/* Scrollable Messages Container */}
-      {messages.length > 0 ? (
-        <ChatMessages messages={messages} messagesEndRef={messagesEndRef} />
-      ) : (
-        <ChatExamples
-          task={modelConfig.task}
-          onExampleClick={(example) => {
-            if (example.image) {
-              handleImageUrl(example.image)
-            }
-            setInputText(example.prompt)
-            handleSubmitOnText(example.prompt, example.image)
-          }}
-        />
-      )}
+        {/* Progress Bar */}
+        {progressItems.length > 0 && (
+          <ChatProgress progressItems={progressItems} />
+        )}
+      </div>
 
       {/* Fixed Footer */}
       <div
@@ -850,25 +855,13 @@ function Chat() {
                 </DropdownMenu>
               )}
 
-              <Input
-                type="email"
+              <Textarea
                 placeholder="Type a message..."
                 value={inputText}
-                onChange={handleInputChange}
-                onKeyPress={handleKeyPress}
+                onInput={handleTextareaChange}
+                onKeyDown={handleKeyDown}
               />
 
-              {!isGenerating && (
-                <Button
-                  size="icon"
-                  onClick={() => {
-                    // handleImageSubmit()
-                    handleSubmit()
-                  }}
-                  disabled={isLoading || (!inputText && !previewImageUrl)}>
-                  <ArrowUp className="w-4 h-4" />
-                </Button>
-              )}
               {!isGenerating && enableDropzone && (
                 <Button
                   size="icon"
@@ -882,14 +875,25 @@ function Chat() {
                   <Brush className="w-4 h-4" />
                 </Button>
               )}
-              {isGenerating && (
-                <Button size="icon" onClick={handleInterrupt}>
-                  <CircleStop className="w-4 h-4" />
-                </Button>
-              )}
             </div>
           )}
         </div>
+        {!enableDropzone && !isGenerating ? (
+          <Button
+            onClick={() => {
+              // handleImageSubmit()
+              handleSubmit()
+            }}
+            disabled={isLoading || (!inputText && !previewImageUrl)}>
+            <ArrowUp className="w-4 h-4" />
+          </Button>
+        ) : (
+          isGenerating && (
+            <Button onClick={handleInterrupt}>
+              <CircleStop className="w-4 h-4" />
+            </Button>
+          )
+        )}
       </div>
     </div>
   )

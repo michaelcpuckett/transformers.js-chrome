@@ -15,20 +15,12 @@ function Progress({ file, progress, total }) {
   )
 }
 
-function ChatProgress({
-  progressItems,
-  offset
-}: {
-  progressItems: ProgressItem[]
-  offset: number
-}) {
+function ChatProgress({ progressItems }: { progressItems: ProgressItem[] }) {
   return (
-    <div className={`fixed left-0 right-0 z-50`} style={{ bottom: offset }}>
-      <div className="m-2 p-2">
-        {progressItems.map((item) => (
-          <Progress key={item.file} {...item} />
-        ))}
-      </div>
+    <div className="m-2 p-2">
+      {progressItems.map((item) => (
+        <Progress key={item.file} {...item} />
+      ))}
     </div>
   )
 }

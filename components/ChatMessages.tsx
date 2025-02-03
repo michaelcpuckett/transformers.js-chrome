@@ -33,7 +33,6 @@ function ChatMessages({
   return (
     <div
       style={{
-        flex: 1,
         overflowY: "auto",
         padding: "16px 20px",
         display: "flex",
